@@ -347,14 +347,18 @@ const trustBadges = [
    ================================================================ */
 export default function Home() {
   const [popupOpen, setPopupOpen] = useState(false);
+  const [popupKey, setPopupKey] = useState(0);
 
-  const openPopup = useCallback(() => setPopupOpen(true), []);
+  const openPopup = useCallback(() => {
+    setPopupKey((k) => k + 1);
+    setPopupOpen(true);
+  }, []);
   const closePopup = useCallback(() => setPopupOpen(false), []);
 
   return (
     <>
     {/* ── Watch Now Popup ── */}
-    <WatchNowPopup open={popupOpen} onClose={closePopup} redirectUrl={REDIRECT_URL} />
+    <WatchNowPopup key={popupKey} open={popupOpen} onClose={closePopup} redirectUrl={REDIRECT_URL} />
     <div className="noise-overlay relative min-h-screen overflow-x-hidden">
       {/* JSON-LD Structured Data */}
       <JsonLd />

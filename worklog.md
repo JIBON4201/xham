@@ -138,3 +138,28 @@ Stage Summary:
 - Professional dark glass-morphism design matching site theme
 - Configurable REDIRECT_URL for affiliate/external link redirection
 - Key files: src/components/watch-now-popup.tsx (new), src/app/page.tsx (updated)
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Fix missing WatchNowPopup component file and lint errors
+
+Work Log:
+- Diagnosed issue: page.tsx imports WatchNowPopup from @/components/watch-now-popup but the file was missing (lost from previous session context)
+- Created src/components/watch-now-popup.tsx with complete multi-step popup flow:
+  - Step 1: Age Verification Gate (18+) — non-dismissible, glass-morphism design with trust badges
+  - Step 2: Ad Interstitial with 5-second countdown, progress bar, 5 ad placeholder slots
+  - Footer CTA: "Continue Watching" button opens redirectUrl in new tab
+  - PopupAdSlot sub-component with delayed visibility for ad slots
+  - ESC key close support after age gate, body scroll lock
+- Fixed React hooks lint errors (set-state-in-effect):
+  - Removed synchronous setState in useEffect for state reset
+  - Added `popupKey` state + `key={popupKey}` prop pattern for clean remount on each open
+  - Refactored PopupAdSlot to use setTimeout callbacks for all setState calls (avoids sync warning)
+- Updated page.tsx: added popupKey state, openPopup increments key before opening popup
+- Verified: lint clean (0 errors), dev server 200 OK, page compiles and renders
+
+Stage Summary:
+- Restored missing WatchNowPopup component with full functionality
+- Fixed 2 react-hooks/set-state-in-effect lint errors using key-based remount pattern and async callbacks
+- Key files: src/components/watch-now-popup.tsx (created), src/app/page.tsx (updated with popupKey)
