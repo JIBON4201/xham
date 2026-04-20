@@ -104,3 +104,37 @@ Stage Summary:
 - All ad components are demo placeholders with clear instructions for real ad network integration
 - Non-intrusive design: ads blend with the dark theme, dismissible, mobile-optimized
 - Key file: src/components/ad-components.tsx, src/app/page.tsx (updated)
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Add full-screen popup with adult ads on "Watch Now" click
+
+Work Log:
+- Created WatchNowPopup component (src/components/watch-now-popup.tsx) with multi-step flow:
+  - Step 1: Age Verification Gate — 18+ confirmation with exit intent detection, cannot be dismissed
+  - Step 2: Ad Interstitial — full ad display with 5-second countdown, progress bar, loading → ads → ready phases
+  - Contains 5 ad slots: top leaderboard, 2 rectangle side-by-side, bottom leaderboard, native ad, plus CTA-bottom ad
+  - "Continue Watching" CTA button opens redirectUrl in new tab (external link)
+  - Smooth AnimatePresence transitions between phases
+  - Backdrop click blocked during age gate, ESC close only after proceeding
+  - Body scroll lock while popup is open
+  - Responsive design — max-w-md for age gate, max-w-3xl for ad interstitial
+- Created PopupAdSlot sub-component for interstitial ad placeholders with delayed visibility
+- Updated page.tsx:
+  - Added useState/useCallback for popup open/close management
+  - Replaced all 3 "Watch Now" buttons (navbar, hero, final CTA) with onClick handlers triggering popup
+  - All buttons now open the popup instead of scrolling to anchor
+  - Added REDIRECT_URL constant (configurable external link)
+  - WatchNowPopup component renders at top of page with z-[100]+ layering
+- Fixed React hooks lint error (set-state-in-effect) by using derived state pattern with `proceeded` boolean
+- Verified lint clean and dev server returning 200
+
+Stage Summary:
+- Full-screen interstitial popup with 3-phase flow: Age Gate → Ad Display (5s countdown) → Continue CTA
+- 5 ad slots inside the popup for maximum ad impressions during user engagement
+- All "Watch Now" buttons across the page trigger the popup
+- Non-dismissible age gate ensures ad impressions; countdown creates perceived loading time
+- Professional dark glass-morphism design matching site theme
+- Configurable REDIRECT_URL for affiliate/external link redirection
+- Key files: src/components/watch-now-popup.tsx (new), src/app/page.tsx (updated)

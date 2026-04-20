@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -30,8 +31,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { AdBanner, InContentAd, MobileStickyAd } from "@/components/ad-components";
+import { WatchNowPopup } from "@/components/watch-now-popup";
 
-const WATCH_NOW_URL = "#watch-now";
+// Replace this URL with your actual affiliate/redirect URL
+const REDIRECT_URL = "https://example.com/redirect";
 const SITE_NAME = "VaultStream";
 const SITE_URL = "https://vaultstream.com";
 
@@ -343,7 +346,15 @@ const trustBadges = [
    PAGE COMPONENT
    ================================================================ */
 export default function Home() {
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const openPopup = useCallback(() => setPopupOpen(true), []);
+  const closePopup = useCallback(() => setPopupOpen(false), []);
+
   return (
+    <>
+    {/* ── Watch Now Popup ── */}
+    <WatchNowPopup open={popupOpen} onClose={closePopup} redirectUrl={REDIRECT_URL} />
     <div className="noise-overlay relative min-h-screen overflow-x-hidden">
       {/* JSON-LD Structured Data */}
       <JsonLd />
@@ -389,12 +400,12 @@ export default function Home() {
             </a>
           </div>
 
-          <a href={WATCH_NOW_URL} itemProp="url">
+          <button onClick={openPopup} itemProp="url">
             <Button className="bg-gradient-to-r from-rose-500 to-violet-500 text-white shadow-lg hover:from-rose-600 hover:to-violet-600 transition-all duration-300">
               Watch Now
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
-          </a>
+          </button>
         </div>
       </motion.nav>
 
@@ -463,7 +474,7 @@ export default function Home() {
                 custom={3}
                 className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
               >
-                <a href={WATCH_NOW_URL}>
+                <button onClick={openPopup}>
                   <Button
                     size="lg"
                     className="animate-glow h-13 rounded-xl bg-gradient-to-r from-rose-500 to-violet-500 px-8 text-base font-semibold text-white hover:from-rose-600 hover:to-violet-600 transition-all duration-300"
@@ -472,7 +483,7 @@ export default function Home() {
                     Watch Now — Free Instant Access
                     <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
                   </Button>
-                </a>
+                </button>
                 <p className="text-xs text-muted-foreground">
                   No signup &bull; No credit card &bull; Instant access &bull; Zero tracking
                 </p>
@@ -1041,7 +1052,7 @@ export default function Home() {
                   custom={3}
                   className="mt-10 flex flex-col items-center gap-3"
                 >
-                  <a href={WATCH_NOW_URL}>
+                  <button onClick={openPopup}>
                     <Button
                       size="lg"
                       className="animate-glow h-13 rounded-xl bg-gradient-to-r from-rose-500 to-violet-500 px-10 text-base font-semibold text-white hover:from-rose-600 hover:to-violet-600 transition-all duration-300"
@@ -1050,7 +1061,7 @@ export default function Home() {
                       Watch Now — Free Instant Access
                       <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
                     </Button>
-                  </a>
+                  </button>
                   <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Lock className="h-3 w-3" aria-hidden="true" /> AES-256 Encrypted
@@ -1147,5 +1158,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
