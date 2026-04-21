@@ -45,8 +45,8 @@ interface WatchNowPopupProps {
 
 const LOADING_DURATION = AD_CONFIG.behavior.loadingScreenDuration;
 
-/* Fake content data for the content page */
-const CONTENT_DATA = [
+/* Fake content template — images come from database */
+const CONTENT_TEMPLATES = [
   {
     id: "featured-1",
     title: "Exclusive Private Session — Premium HD",
@@ -55,7 +55,7 @@ const CONTENT_DATA = [
     likes: "48.7K",
     time: "2 days ago",
     duration: "18:42",
-    thumb: "/ai-gallery/scene-02.png",
+    thumbIndex: 1,
     description:
       "Watch this exclusive premium content in full HD. Available only on VaultStream — the most trusted private streaming platform.",
     tags: ["Exclusive", "HD", "Premium"],
@@ -68,7 +68,7 @@ const CONTENT_DATA = [
     likes: "37.1K",
     time: "5 hours ago",
     duration: "24:15",
-    thumb: "/ai-gallery/scene-08.png",
+    thumbIndex: 7,
     description:
       "Most-watched content this week. Stream in 4K with zero buffering. Completely free, no signup required.",
     tags: ["Trending", "4K", "New"],
@@ -81,16 +81,12 @@ const CONTENT_DATA = [
     likes: "92.4K",
     time: "1 week ago",
     duration: "32:08",
-    thumb: "/ai-gallery/scene-18.png",
+    thumbIndex: 17,
     description:
       "Full uncut collection available now. End-to-end encrypted streaming with zero tracking. Watch privately.",
     tags: ["Uncut", "Encrypted", "VIP"],
   },
 ];
-
-/* Randomly pick featured content per session */
-const FEATURED =
-  CONTENT_DATA[Math.floor(Math.random() * CONTENT_DATA.length)];
 
 export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupProps) {
   const [step, setStep] = useState<"age-gate" | "loading" | "content">(
@@ -100,6 +96,29 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const contentClickedRef = useRef(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+
+  // Fetch gallery images from database
+  useEffect(() => {
+    fetch("/api/gallery")
+      .then((res) => res.json())
+      .then((data) => {
+        const imgs = data.map((c: { image: string }) => c.image);
+        if (imgs.length > 0) setGalleryImages(imgs);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Build content data with live images from database
+  const CONTENT_DATA = galleryImages.length > 0
+    ? CONTENT_TEMPLATES.map((t) => ({
+        ...t,
+        thumb: galleryImages[t.thumbIndex % galleryImages.length],
+      }))
+    : CONTENT_TEMPLATES.map((t) => ({ ...t, thumb: "/ai-gallery/scene-01.png" }));
+
+  const FEATURED =
+    CONTENT_DATA[Math.floor(Math.random() * CONTENT_DATA.length)];
 
   // Lock body scroll when popup is open
   useEffect(() => {
@@ -409,7 +428,7 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
                         fill
                         className="object-cover transition-transform duration-500 hover:scale-105"
                         sizes="(max-width: 768px) 100vw, 896px"
-                        priority
+                        unoptimized
                       />
 
                       {/* Dark overlay */}
