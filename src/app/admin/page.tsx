@@ -10,13 +10,11 @@ import {
   Trash2,
   Plus,
   Save,
-  X,
   Search,
   ChevronLeft,
   Eye,
   EyeOff,
   RefreshCw,
-  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -413,46 +411,44 @@ export default function AdminPage() {
                     {card.category}
                   </Badge>
 
+                  {/* Inactive badge */}
+                  {!card.active && (
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/70 px-3 py-1 text-[11px] font-medium text-rose-400 backdrop-blur-sm">
+                      Hidden
+                    </div>
+                  )}
+
                   {/* Quick actions overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="h-8 w-8 rounded-full p-0"
+                      className="h-10 w-10 rounded-full p-0 shadow-lg"
+                      title="Edit card details"
                       onClick={() => openEdit(card)}
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="h-8 w-8 rounded-full p-0"
+                      className="h-10 w-10 rounded-full p-0 shadow-lg"
+                      title="Change image"
                       onClick={() => {
                         setUploadCardId(card.id);
                         setEditForm({ ...card });
                       }}
                     >
-                      <ImageIcon className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-8 w-8 rounded-full p-0"
-                      onClick={() => toggleActive(card)}
-                    >
-                      {card.active ? (
-                        <EyeOff className="h-3.5 w-3.5" />
-                      ) : (
-                        <Eye className="h-3.5 w-3.5" />
-                      )}
+                      <ImageIcon className="h-4 w-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="h-8 w-8 rounded-full p-0"
+                      className="h-10 w-10 rounded-full p-0 shadow-lg"
+                      title="Delete card"
                       onClick={() => setDeleteTarget(card)}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
