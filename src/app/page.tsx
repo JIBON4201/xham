@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/accordion";
 import { AdBanner, InContentAd, MobileStickyAd } from "@/components/ad-components";
 import { WatchNowPopup } from "@/components/watch-now-popup";
+import { AiGallerySection } from "@/components/ai-gallery-section";
 import { useAdMonetization } from "@/hooks/use-ad-monetization";
 
 // Ad network smartlink URL is now configured in src/lib/ad-config.ts
@@ -540,6 +541,9 @@ export default function Home() {
 
         {/* ── AD: Below Hero (Leaderboard) ── */}
         <AdBanner id="below-hero" slot="below-hero-728x90" label="728×90 Leaderboard — Below Hero" dismissible />
+
+        {/* ═══════════════ AI GALLERY ═══════════════ */}
+        <AiGallerySection onCardClick={openPopup} />
 
         {/* ═══════════════ FEATURES ═══════════════ */}
         <section className="py-20 sm:py-28" id="features" aria-labelledby="features-heading">
