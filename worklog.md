@@ -314,3 +314,31 @@ Stage Summary:
 - Slot order (top→bottom): top-bar → below-hero → post-gallery → mid-page-1 → post-howitworks → pre-article → in-article-1 → in-article-2 → pre-faq → pre-cta → post-cta → pre-footer → mobile-sticky → footer-inline → bottom-trap → popup-content-banner → popup-mid-native
 - Each slot is a clickable smartlink unit with rotating ad copy
 - Key file: src/app/page.tsx (updated)
+---
+Task ID: 1
+Agent: Main
+Task: Homepage clarity improvements — hero update, gallery refinement, navigation clarity
+
+Work Log:
+- Updated Hero section headline to "AI Generated Visual Preview Gallery"
+- Updated Hero description to "Browse trending AI-generated images and short cinematic clips"
+- Added primary CTA "Explore Content" (scrolls to gallery) + secondary "Watch Now" (opens popup)
+- Removed hero inline ad between description and CTA for cleaner user flow
+- Reduced hero padding (pt-20→pt-12, pb-20→pb-12) so gallery is visible sooner
+- Removed hero stats section (2.4M+, 50K+, etc.) to reduce hero height
+- Changed AiGallerySection CARDS_PER_PAGE from 12 to 8 (shows 8 cards initially)
+- Updated card type labels: Nature→"AI Visual", Sci-Fi→"Trending Clip", Fantasy→"Preview Scene"
+- Added scroll navigation clarity text: "Scroll to view more AI content • 26+ visuals available" with bouncing chevron
+- Changed gallery section padding from py-20 to py-12 (mobile) / py-20 (desktop)
+- Updated section header text for clarity: "Preview Gallery" label, "Browse AI-generated images and short cinematic clips"
+- Added ArrowDown icon import to page.tsx, ChevronDown to gallery section
+- Cleaned up unused imports (ImageIcon, Video)
+- All lint checks pass, dev server compiles successfully
+
+Stage Summary:
+- Hero is now clearer: tells users exactly what the site offers ("AI Generated Visual Preview Gallery")
+- Gallery shows 8 cards initially instead of 12, fitting better in first viewport
+- Each card has contextual type labels (AI Visual, Trending Clip, Preview Scene)
+- Navigation clarity text under grid guides users to scroll for more content
+- Overall design theme and dark cinematic style preserved
+- All ad slots remain functional (only hero-inline ad removed for cleaner flow)

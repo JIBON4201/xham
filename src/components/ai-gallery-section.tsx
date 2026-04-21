@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Play, Eye, Clock, Sparkles, TrendingUp, Film, Flame, Crown, Zap } from "lucide-react";
+import { Play, Eye, Clock, Sparkles, TrendingUp, Film, Flame, Crown, Zap, ChevronDown } from "lucide-react";
 
 /* ════════════════════════════════════════════════════════════════
    AI GALLERY SECTION
@@ -301,7 +301,7 @@ const CATEGORIES = [
   { key: "abstract", label: "Abstract" },
 ] as const;
 
-const CARDS_PER_PAGE = 12;
+const CARDS_PER_PAGE = 8;
 
 interface AiGallerySectionProps {
   onCardClick: (cardId: string) => void;
@@ -336,9 +336,17 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
     setVisibleCount((prev) => prev + CARDS_PER_PAGE);
   }, []);
 
+  // Determine a descriptive label for each card
+  const getCardTypeLabel = (card: AiGalleryCard): string => {
+    if (card.category === 'nature') return 'AI Visual';
+    if (card.category === 'scifi') return 'Trending Clip';
+    if (card.category === 'fantasy') return 'Preview Scene';
+    return 'AI Visual';
+  };
+
   return (
     <section
-      className="py-20 sm:py-28"
+      className="py-12 sm:py-20"
       id="ai-gallery"
       aria-labelledby="gallery-heading"
     >
@@ -358,7 +366,7 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
                 aria-hidden="true"
               />
               <span className="text-xs font-semibold uppercase tracking-widest text-rose-400">
-                AI-Generated Gallery
+                Preview Gallery
               </span>
             </div>
             <h2
@@ -369,14 +377,13 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
               <span className="text-gradient">AI Visuals</span>
             </h2>
             <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-              Explore our curated collection of AI-generated cinematic scenes.
-              Click any card to preview the full experience.
+              Browse AI-generated images and short cinematic clips. Click any card to preview.
             </p>
           </div>
 
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted-foreground">
             <Eye className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />
-            <span>{GALLERY_CARDS.length} scenes available</span>
+            <span>{GALLERY_CARDS.length}+ AI visuals available</span>
           </div>
         </motion.div>
 
@@ -497,7 +504,7 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
                   </h3>
                   <div className="mt-1.5 flex items-center justify-between">
                     <span className="text-[11px] text-muted-foreground">
-                      AI Generated Scene
+                      {getCardTypeLabel(card)}
                     </span>
                     <span className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
                       <Eye className="h-3 w-3" aria-hidden="true" />
@@ -520,25 +527,33 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
           </AnimatePresence>
         </div>
 
-        {/* Load More button */}
-        {hasMore && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-10 flex justify-center"
-          >
-            <button
-              onClick={handleLoadMore}
-              className="group relative overflow-hidden rounded-full border border-white/10 bg-white/[0.03] px-8 py-3 text-sm font-medium text-muted-foreground transition-all duration-300 hover:border-rose-500/40 hover:text-rose-400"
+        {/* Navigation clarity — scroll hint + Load More */}
+        <div className="mt-10 flex flex-col items-center gap-4">
+          {/* Scroll hint text */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+            <ChevronDown className="h-3.5 w-3.5 animate-bounce" aria-hidden="true" />
+            <span>Scroll to view more AI content &bull; {GALLERY_CARDS.length}+ visuals available</span>
+          </div>
+
+          {/* Load More button */}
+          {hasMore && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
             >
-              <span className="relative z-10">
-                Load More — {filteredCards.length - visibleCount} remaining
-              </span>
-              <div className="absolute inset-0 -z-0 bg-gradient-to-r from-rose-500/0 via-rose-500/5 to-rose-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            </button>
-          </motion.div>
-        )}
+              <button
+                onClick={handleLoadMore}
+                className="group relative overflow-hidden rounded-full border border-white/10 bg-white/[0.03] px-8 py-3 text-sm font-medium text-muted-foreground transition-all duration-300 hover:border-rose-500/40 hover:text-rose-400"
+              >
+                <span className="relative z-10">
+                  Load More — {filteredCards.length - visibleCount} remaining
+                </span>
+                <div className="absolute inset-0 -z-0 bg-gradient-to-r from-rose-500/0 via-rose-500/5 to-rose-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              </button>
+            </motion.div>
+          )}
+        </div>
 
         {/* Bottom CTA */}
         <motion.div

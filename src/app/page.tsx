@@ -16,6 +16,7 @@ import {
   Clock,
   Star,
   ArrowRight,
+  ArrowDown,
   CheckCircle2,
   Cpu,
   Wifi,
@@ -457,7 +458,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
           </div>
 
-          <div className="mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6 sm:pt-28 lg:pt-36">
+          <div className="mx-auto max-w-6xl px-4 pb-12 pt-12 sm:px-6 sm:pt-16 lg:pt-20">
             <motion.div
               initial="hidden"
               animate="visible"
@@ -480,10 +481,8 @@ export default function Home() {
                 id="hero-heading"
                 className="text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl md:text-6xl"
               >
-                Stream Exclusive{" "}
-                <span className="text-gradient">Private Videos</span>
-                <br />
-                Instant HD &amp; 4K Access — No Signup
+                AI Generated{" "}
+                <span className="text-gradient">Visual Preview</span> Gallery
               </motion.h1>
 
               <motion.p
@@ -491,16 +490,9 @@ export default function Home() {
                 custom={2}
                 className="mx-auto mt-6 max-w-xl text-base text-muted-foreground sm:text-lg"
               >
-                VaultStream gives you instant access to 50,000+ curated premium
-                private videos with military-grade AES-256 encryption, adaptive
-                4K streaming, and a strict zero-logging privacy policy. No
-                account, no email, no credit card — ever.
+                Browse trending AI-generated images and short cinematic clips.
+                Explore our curated collection of exclusive visual content — no signup required.
               </motion.p>
-
-              {/* ── AD: Hero Inline (between text and CTA) ── */}
-              <div className="mt-8">
-                <AdBanner id="hero-inline" slot="hero-inline-728x90" label="728×90 — Hero Inline" dismissible />
-              </div>
 
               <motion.div
                 variants={fadeUp}
@@ -508,44 +500,36 @@ export default function Home() {
                 className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
               >
                   <Button
-                    onClick={openPopup}
+                    onClick={() => {
+                      const gallery = document.getElementById('ai-gallery');
+                      if (gallery) gallery.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     size="lg"
                     className="animate-glow h-13 rounded-xl bg-gradient-to-r from-rose-500 to-violet-500 px-8 text-base font-semibold text-white hover:from-rose-600 hover:to-violet-600 transition-all duration-300"
                   >
-                    <Play className="mr-2 h-5 w-5 fill-white" aria-hidden="true" />
-                    Watch Now — Free Instant Access
-                    <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                    <Eye className="mr-2 h-5 w-5" aria-hidden="true" />
+                    Explore Content
+                    <ArrowDown className="ml-1 h-4 w-4" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    onClick={openPopup}
+                    size="lg"
+                    variant="outline"
+                    className="h-13 rounded-xl border-white/15 bg-white/[0.03] px-6 text-base font-medium text-muted-foreground hover:border-rose-500/40 hover:text-rose-400 transition-all duration-300"
+                  >
+                    <Play className="mr-2 h-5 w-5 fill-current" aria-hidden="true" />
+                    Watch Now
                   </Button>
                 <p className="text-xs text-muted-foreground">
                   No signup &bull; No credit card &bull; Instant access &bull; Zero tracking
                 </p>
               </motion.div>
 
-              {/* Trust stats */}
-              <motion.div
-                variants={fadeUp}
-                custom={4}
-                className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-8"
-                aria-label="VaultStream platform statistics"
-              >
-                {stats.map((s) => (
-                  <div key={s.label} className="text-center">
-                    <div className="text-2xl font-bold text-gradient sm:text-3xl">
-                      {s.value}
-                    </div>
-                    <div className="mt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                      <s.icon className="h-3.5 w-3.5" aria-hidden="true" />
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-
               {/* Trust badges row */}
               <motion.div
                 variants={fadeUp}
-                custom={5}
-                className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+                custom={4}
+                className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
                 aria-label="Trust and security badges"
               >
                 {trustBadges.map((b) => (
