@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -37,58 +37,40 @@ import { AD_CONFIG } from "@/lib/ad-config";
    - onContentClick: callback(contentId) for smartlink + popunder
    ════════════════════════════════════════════════════════════════ */
 
+interface SelectedCardData {
+  sceneId: string;
+  title: string;
+  image: string;
+  tag: string;
+  duration: string;
+  views: string;
+}
+
 interface WatchNowPopupProps {
   open: boolean;
   onClose: () => void;
   onContentClick?: (contentId: string) => void;
+  selectedCard?: SelectedCardData | null;
 }
 
 const LOADING_DURATION = AD_CONFIG.behavior.loadingScreenDuration;
 
-/* Fake content template — images come from database */
-const CONTENT_TEMPLATES = [
-  {
-    id: "featured-1",
-    title: "Exclusive Private Session — Premium HD",
-    channel: "VaultStream Originals",
-    views: "1.2M views",
-    likes: "48.7K",
-    time: "2 days ago",
-    duration: "18:42",
-    thumbIndex: 1,
-    description:
-      "Watch this exclusive premium content in full HD. Available only on VaultStream — the most trusted private streaming platform.",
-    tags: ["Exclusive", "HD", "Premium"],
-  },
-  {
-    id: "featured-2",
-    title: "Trending Now — Limited Time Only",
-    channel: "VS Premium",
-    views: "892K views",
-    likes: "37.1K",
-    time: "5 hours ago",
-    duration: "24:15",
-    thumbIndex: 7,
-    description:
-      "Most-watched content this week. Stream in 4K with zero buffering. Completely free, no signup required.",
-    tags: ["Trending", "4K", "New"],
-  },
-  {
-    id: "featured-3",
-    title: "Members Only Collection — Uncut Version",
-    channel: "VaultStream Gold",
-    views: "2.1M views",
-    likes: "92.4K",
-    time: "1 week ago",
-    duration: "32:08",
-    thumbIndex: 17,
-    description:
-      "Full uncut collection available now. End-to-end encrypted streaming with zero tracking. Watch privately.",
-    tags: ["Uncut", "Encrypted", "VIP"],
-  },
+const CHANNELS = ["VaultStream Originals", "VS Premium", "VaultStream Gold", "VS Exclusive", "VS 4K"];
+const DESCRIPTIONS = [
+  "Watch this exclusive premium content in full HD. Available only on VaultStream — the most trusted private streaming platform.",
+  "Most-watched content this week. Stream in 4K with zero buffering. Completely free, no signup required.",
+  "Full uncut collection available now. End-to-end encrypted streaming with zero tracking. Watch privately.",
+  "Premium HD content available exclusively on VaultStream. Zero signup, instant access.",
+];
+const TAG_SETS = [
+  ["Exclusive", "HD", "Premium"],
+  ["Trending", "4K", "New"],
+  ["Uncut", "Encrypted", "VIP"],
+  ["HD", "Exclusive", "New"],
+  ["Premium", "4K", "Encrypted"],
 ];
 
-export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupProps) {
+export function WatchNowPopup({ open, onClose, onContentClick, selectedCard }: WatchNowPopupProps) {
   const [step, setStep] = useState<"age-gate" | "loading" | "content">(
     "age-gate"
   );
@@ -96,29 +78,83 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const contentClickedRef = useRef(false);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryCards, setGalleryCards] = useState<Array<{ id: string; sceneId: string; title: string; image: string; tag: string; duration: string; views: string }>>([]);
 
-  // Fetch gallery images from database
+  // Fetch all gallery cards from database
   useEffect(() => {
     fetch("/api/gallery")
       .then((res) => res.json())
       .then((data) => {
-        const imgs = data.map((c: { image: string }) => c.image);
-        if (imgs.length > 0) setGalleryImages(imgs);
+        if (data.length > 0) setGalleryCards(data);
       })
       .catch(() => {});
   }, []);
 
-  // Build content data with live images from database
-  const CONTENT_DATA = galleryImages.length > 0
-    ? CONTENT_TEMPLATES.map((t) => ({
-        ...t,
-        thumb: galleryImages[t.thumbIndex % galleryImages.length],
-      }))
-    : CONTENT_TEMPLATES.map((t) => ({ ...t, thumb: "/ai-gallery/scene-01.png" }));
+  // Build featured content from the clicked card
+  const FEATURED = useMemo(() => {
+    // If a specific card was clicked, use its data
+    if (selectedCard) {
+      const idx = selectedCard.sceneId.replace('scene-', '');
+      const num = parseInt(idx) || 1;
+      return {
+        id: selectedCard.sceneId,
+        title: selectedCard.title,
+        channel: CHANNELS[num % CHANNELS.length],
+        views: selectedCard.views + " views",
+        likes: (num * 8.3).toFixed(1) + "K",
+        time: num <= 10 ? "2 days ago" : num <= 20 ? "5 hours ago" : "1 week ago",
+        duration: selectedCard.duration,
+        thumb: selectedCard.image,
+        description: DESCRIPTIONS[num % DESCRIPTIONS.length],
+        tags: TAG_SETS[num % TAG_SETS.length],
+      };
+    }
+    // Fallback: use first gallery card
+    if (galleryCards.length > 0) {
+      const c = galleryCards[0];
+      return {
+        id: c.sceneId,
+        title: c.title,
+        channel: CHANNELS[0],
+        views: c.views + " views",
+        likes: "48.7K",
+        time: "2 days ago",
+        duration: c.duration,
+        thumb: c.image,
+        description: DESCRIPTIONS[0],
+        tags: TAG_SETS[0],
+      };
+    }
+    // Final fallback
+    return {
+      id: "default",
+      title: "Exclusive Premium Content",
+      channel: "VaultStream Originals",
+      views: "1.2M views",
+      likes: "48.7K",
+      time: "2 days ago",
+      duration: "18:42",
+      thumb: "/ai-gallery/scene-01.png",
+      description: DESCRIPTIONS[0],
+      tags: TAG_SETS[0],
+    };
+  }, [selectedCard, galleryCards]);
 
-  const FEATURED =
-    CONTENT_DATA[Math.floor(Math.random() * CONTENT_DATA.length)];
+  // Related content = other cards from gallery (excluding the clicked one)
+  const RELATED = useMemo(() => {
+    const clickedId = selectedCard?.sceneId || FEATURED.id;
+    return galleryCards
+      .filter((c) => c.sceneId !== clickedId)
+      .slice(0, 3)
+      .map((c, i) => ({
+        id: c.sceneId,
+        title: c.title,
+        channel: CHANNELS[(i + 1) % CHANNELS.length],
+        views: c.views + " views",
+        duration: c.duration,
+        thumb: c.image,
+      }));
+  }, [galleryCards, selectedCard, FEATURED.id]);
 
   // Lock body scroll when popup is open
   useEffect(() => {
@@ -560,7 +596,7 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
                         Related Content
                       </h3>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        {CONTENT_DATA.filter((c) => c.id !== FEATURED.id).map(
+                        {RELATED.map(
                           (item) => (
                             <div
                               key={item.id}

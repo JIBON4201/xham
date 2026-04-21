@@ -55,7 +55,7 @@ const CATEGORIES = [
 const CARDS_PER_PAGE = 8;
 
 interface AiGallerySectionProps {
-  onCardClick: (cardId: string) => void;
+  onCardClick: (card: { sceneId: string; title: string; image: string; tag: string; duration: string; views: string }) => void;
 }
 
 export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
@@ -95,8 +95,8 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
   const hasMore = visibleCount < filteredCards.length;
 
   const handleCardClick = useCallback(
-    (cardId: string) => {
-      onCardClick(cardId);
+    (card: { sceneId: string; title: string; image: string; tag: string; duration: string; views: string }) => {
+      onCardClick(card);
     },
     [onCardClick]
   );
@@ -224,14 +224,14 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
                   }}
                   onMouseEnter={() => setHoveredId(card.id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  onClick={() => handleCardClick(card.sceneId)}
+                  onClick={() => handleCardClick({ sceneId: card.sceneId, title: card.title, image: card.image, tag: card.tag, duration: card.duration, views: card.views })}
                   className="ai-gallery-card group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] transition-all duration-500 hover:border-rose-500/40"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      handleCardClick(card.sceneId);
+                      handleCardClick({ sceneId: card.sceneId, title: card.title, image: card.image, tag: card.tag, duration: card.duration, views: card.views });
                     }
                   }}
                   aria-label={`Preview ${card.title} — ${card.tag}`}
