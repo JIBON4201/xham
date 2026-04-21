@@ -248,3 +248,43 @@ Stage Summary:
 - Smartlink opens on EVERY content click (50/50 Adsterra/HilltopAds rotation)
 - All existing page-level ad placements (8 slots) and scroll-triggered push remain active
 - Key files: watch-now-popup.tsx (rewritten), use-ad-monetization.ts (updated), ad-config.ts (updated), page.tsx (updated)
+---
+Task ID: 8
+Agent: Main Agent
+Task: Optimize all ad slots — make every slot a working clickable smartlink unit
+
+Work Log:
+- Completely rewrote src/components/ad-components.tsx:
+  - All ad slots now render REAL clickable ad banners (not empty placeholders)
+  - Each slot opens a smartlink (Adsterra or HilltopAds) in a new tab on click
+  - 50/50 smartlink rotation per click for maximum revenue variety
+  - Rotating ad copy (4 headline variations for leaderboard, 3 for native, etc.) to avoid ad blindness
+  - Proper size-specific renderings:
+    * Leaderboard (728x90): Gradient banner with icon, headline, subtext, CTA button
+    * Native: Card with sponsored badge, star icon, headline, description, CTA + secure badges
+    * Rectangle (300x250): Vertical card with icon, headline, description, CTA
+    * Mobile Sticky (320x50): Compact bar with icon, headline, subtext, CTA
+    * Popup Banner: Minimal inline ad for content popup
+    * Fluid: Flexible width with headline + CTA
+  - All slots use <a> tags with rel="sponsored" for SEO compliance
+  - Lazy-loading IntersectionObserver with 300px root margin
+  - Proper accessibility: role="complementary", aria-label
+- Added new PopupBanner component export for popup ad integration
+- Updated watch-now-popup.tsx:
+  - Replaced raw empty banner div with PopupBanner component (below player)
+  - Added second PopupBanner between description and related content grid
+  - Total popup ads: 2 working smartlink units per content view
+- Updated ad-scripts-provider.tsx:
+  - Cleaned up script injection with dedup Set
+  - Better error handling and comments for adding future ad networks
+- Verified: lint clean (0 errors), dev server compiling normally
+
+Stage Summary:
+- EVERY ad slot is now a working revenue-generating unit (zero empty placeholders)
+- Total working ad slots: 10 (5 leaderboard + 2 native + 1 mobile sticky + 2 popup banner)
+- Each click opens smartlink in new tab → revenue on every interaction
+- 50/50 rotation between Adsterra and HilltopAds smartlinks
+- Rotating ad copy prevents ad blindness across multiple slots
+- SEO-friendly: rel="sponsored", aria-label, role="complementary"
+- Performance: lazy-loaded, no blocking, lightweight
+- Key files: ad-components.tsx (rewritten), watch-now-popup.tsx (updated), ad-scripts-provider.tsx (updated)

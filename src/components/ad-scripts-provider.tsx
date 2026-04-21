@@ -5,29 +5,36 @@ import { AD_CONFIG } from "@/lib/ad-config";
 
 /* ════════════════════════════════════════════════════════════════
    AD SCRIPTS PROVIDER
-   Injects third-party ad network scripts globally.
-   This component renders nothing visible — it only manages
-   script injection for Adsterra and HilltopAds.
+   Manages third-party ad network script injection.
 
-   PLACED IN: layout.tsx as a child of <body>
+   Current active scripts:
+   - Adsterra popunder (pre-loaded on mount)
+   - HilltopAds push (lazy-loaded on scroll, handled by hook)
+
+   When you get real ad display scripts from Adsterra/HilltopAds,
+   add their URLs to ad-config.ts and add injection calls here.
    ════════════════════════════════════════════════════════════════ */
 
-function injectScript(url: string, async = true, id?: string): void {
+const loadedScripts = new Set<string>();
+
+function injectScript(url: string, id: string, async = true): void {
   if (!url) return;
-  if (id && document.getElementById(id)) return; // Already loaded
-  if (!id && document.querySelector(`script[src="${url}"]`)) return;
+  if (loadedScripts.has(id)) return;
 
   const script = document.createElement("script");
   script.src = url;
   script.async = async;
-  if (id) script.id = id;
+  script.id = id;
+
   script.onload = () => {
-    // Script loaded successfully
+    loadedScripts.add(id);
   };
+
   script.onerror = () => {
     // Ad script failed — don't block the page
-    console.warn(`[AdScripts] Failed to load: ${url}`);
+    console.warn(`[AdScripts] Failed to load script: ${id}`);
   };
+
   document.head.appendChild(script);
 }
 
@@ -38,24 +45,25 @@ export function AdScriptsProvider() {
     if (mounted.current) return;
     mounted.current = true;
 
-    // Inject Adsterra popunder script
-    // This script typically auto-binds to user clicks and opens
-    // a popunder window on the first interaction.
-    injectScript(
-      AD_CONFIG.adsterra.popunderScriptUrl,
-      true,
-      "adsterra-popunder-script"
-    );
+    // 1. Adsterra popunder script — pre-loads on mount
+    //    This typically auto-binds to clicks and opens a popunder.
+    if (AD_CONFIG.adsterra.popunderScriptUrl) {
+      injectScript(
+        AD_CONFIG.adsterra.popunderScriptUrl,
+        "adsterra-popunder-script"
+      );
+    }
 
-    // HilltopAds push notification script
-    // This handles push notification permission requests.
-    // The actual trigger is controlled by the useAdMonetization hook
-    // which loads it after scroll interaction. We do NOT load it here
-    // to avoid blocking the initial page load.
-    // It will be lazy-loaded by the scroll handler.
+    // 2. HilltopAds push script — loaded by useAdMonetization hook
+    //    after user scrolls 30%+ of the page (lazy, non-blocking).
 
+    // ── ADD MORE AD NETWORK SCRIPTS HERE ──
+    // Example:
+    // if (AD_CONFIG.someNetwork.displayScriptUrl) {
+    //   injectScript(AD_CONFIG.someNetwork.displayScriptUrl, "some-network-display");
+    // }
   }, []);
 
-  // This component renders nothing
+  // Renders nothing
   return null;
 }

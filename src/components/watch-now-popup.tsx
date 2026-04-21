@@ -24,6 +24,7 @@ import {
   SkipForward,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PopupBanner } from "@/components/ad-components";
 import { AD_CONFIG } from "@/lib/ad-config";
 
 /* ════════════════════════════════════════════════════════════════
@@ -445,22 +446,9 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
                       </div>
                     </div>
 
-                    {/* ── Banner Ad (below player) ── */}
-                    <div
-                      className="mx-4 mt-3 sm:mx-5"
-                      data-ad-slot="content-page-banner"
-                    >
-                      <div className="flex items-center justify-center rounded-lg border border-white/5 bg-white/[0.02] px-4 py-2.5">
-                        {/*
-                          ╔═══════════════════════════════════════╗
-                          ║  REPLACE WITH REAL AD CODE             ║
-                          ║  Adsterra / HilltopAds banner          ║
-                          ╚═══════════════════════════════════════╝
-                        */}
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/30">
-                          Advertisement
-                        </span>
-                      </div>
+                    {/* ── Banner Ad (below player) — clickable smartlink unit ── */}
+                    <div className="mx-4 mt-3 sm:mx-5">
+                      <PopupBanner id="popup-content-banner" slot="popup-content-banner" />
                     </div>
 
                     {/* ── Video Info ── */}
@@ -544,6 +532,11 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
                           ))}
                         </div>
                       </div>
+                    </div>
+
+                    {/* ── In-content native ad ── */}
+                    <div className="px-4 sm:px-5">
+                      <PopupBanner id="popup-mid-native" slot="popup-mid-native" />
                     </div>
 
                     {/* ── Related Content Grid ── */}
