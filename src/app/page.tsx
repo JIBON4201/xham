@@ -432,7 +432,7 @@ export default function Home() {
         </div>
       </motion.nav>
 
-      {/* ── AD: Top Bar (immediately below navbar) ── */}
+      {/* ── AD: Top Bar (immediately below navbar, before everything) ── */}
       <div className="relative z-40">
         <AdBanner id="top-bar" slot="top-bar-728x90" label="728×90 Leaderboard — Top Bar" dismissible />
       </div>
@@ -557,14 +557,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── AD: Below Hero (Leaderboard) ── */}
-        <AdBanner id="below-hero" slot="below-hero-728x90" label="728×90 Leaderboard — Below Hero" dismissible />
-
-        {/* ═══════════════ AI GALLERY ═══════════════ */}
+        {/* ═══════════════ TRENDING AI VISUALS ═══════════════ */}
         <AiGallerySection onCardClick={openPopup} />
 
-        {/* ── AD: Between Gallery & Features ── */}
-        <AdBanner id="post-gallery" slot="post-gallery-728x90" label="728×90 Leaderboard — Post Gallery" dismissible />
+        {/* ── AD: Below Gallery (Leaderboard) ── */}
+        <AdBanner id="below-hero" slot="below-hero-728x90" label="728×90 Leaderboard — Below Gallery" dismissible />
 
         {/* ═══════════════ FEATURES ═══════════════ */}
         <section className="py-20 sm:py-28" id="features" aria-labelledby="features-heading">
