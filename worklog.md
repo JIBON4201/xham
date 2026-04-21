@@ -394,3 +394,40 @@ Stage Summary:
 - Ad system now stable: consistent URLs and copy per slot render
 - Popup video player controls bar hover effect now works correctly
 - No dead code or unused imports remaining
+---
+Task ID: 10
+Agent: Main
+Task: Build admin backend for managing gallery card images and text
+
+Work Log:
+- Updated prisma/schema.prisma: Added GalleryCard model (id, sceneId, title, tag, image, duration, views, icon, category, order, active, timestamps)
+- Ran db:push to sync schema, generated Prisma client
+- Created prisma/seed.ts: Seeded all 28 existing gallery cards into database
+- Created API routes:
+  - GET /api/gallery — public endpoint, returns active cards ordered by order
+  - GET/POST /api/admin/cards — admin CRUD (list all + create)
+  - PUT/DELETE /api/admin/cards/[id] — admin update/delete
+  - POST /api/admin/upload — image upload (validates type/size, saves to public/ai-gallery/, optionally links to card)
+- Created /admin page (src/app/admin/page.tsx):
+  - Stats bar (total/active/inactive/categories counts)
+  - Search + category filter + show inactive toggle
+  - Card grid with hover actions (edit/image/visibility/delete)
+  - Edit dialog with 3 tabs: Details (title/tag/category/duration/views/icon), Image (preview + URL + file upload), Settings (order/active toggle)
+  - Quick image upload dialog for fast slot image replacement
+  - Delete confirmation dialog
+  - Sticky footer with card count summary
+  - "View Site" button to return to main page
+- Updated src/components/ai-gallery-section.tsx:
+  - Removed hardcoded GALLERY_CARDS array (28 entries)
+  - Now fetches cards from /api/gallery via useEffect
+  - Icon mapping from string names to Lucide components via ICON_MAP
+  - Loading state with spinner while fetching
+  - All other rendering logic (filter, pagination, animations) preserved
+- Verified: lint clean (0 errors), dev server compiling, API returning 200 with data
+
+Stage Summary:
+- Full admin backend: database-driven gallery card management
+- Admin panel at /admin with CRUD, image upload, search/filter, toggle active
+- Gallery now reads from database instead of hardcoded array — changes in admin reflect instantly
+- Image upload saves to /public/ai-gallery/ and auto-links to card
+- Key files: prisma/schema.prisma, prisma/seed.ts, src/app/api/gallery/route.ts, src/app/api/admin/cards/route.ts, src/app/api/admin/cards/[id]/route.ts, src/app/api/admin/upload/route.ts, src/app/admin/page.tsx, src/components/ai-gallery-section.tsx
