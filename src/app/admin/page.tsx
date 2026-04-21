@@ -393,11 +393,13 @@ export default function AdminPage() {
                 {/* Image */}
                 <div className="relative aspect-video overflow-hidden">
                   <Image
+                    key={card.id + '-' + card.updatedAt}
                     src={card.image}
                     alt={card.title}
                     fill
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
@@ -580,10 +582,12 @@ export default function AdminPage() {
               {editForm.image && (
                 <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10">
                   <Image
+                    key={editForm.image}
                     src={editForm.image}
                     alt="Current image"
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                 </div>
               )}
@@ -688,7 +692,7 @@ export default function AdminPage() {
           <div className="space-y-4">
             {editForm.image && (
               <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10">
-                <Image src={editForm.image} alt="Current" fill className="object-cover" />
+                <Image key={'upload-' + editForm.image} src={editForm.image} alt="Current" fill className="object-cover" unoptimized />
               </div>
             )}
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/10 bg-white/[0.02] p-8 transition-colors hover:border-rose-500/30 hover:bg-rose-500/5">

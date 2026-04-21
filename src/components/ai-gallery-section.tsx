@@ -27,6 +27,7 @@ interface GalleryCardData {
   icon: string;
   category: string;
   order: number;
+  updatedAt: string;
 }
 
 // Map icon name string to Lucide component
@@ -238,11 +239,13 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
                   {/* Image container */}
                   <div className="relative aspect-video overflow-hidden">
                     <Image
+                      key={card.id + '-' + card.updatedAt}
                       src={card.image}
                       alt={`${card.title} — AI-generated cinematic visual preview`}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      unoptimized
                     />
 
                     {/* Soft blur overlay for aesthetic */}

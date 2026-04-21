@@ -578,11 +578,13 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
                             >
                               <div className="relative aspect-video overflow-hidden">
                                 <Image
+                                  key={item.id + '-related'}
                                   src={item.thumb}
                                   alt={item.title}
                                   fill
                                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                                   sizes="(max-width: 640px) 100vw, 33vw"
+                                  unoptimized
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                                 <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white/80">

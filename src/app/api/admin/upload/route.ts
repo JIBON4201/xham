@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, copyFile, unlink } from "fs/promises";
 import { join } from "path";
-import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
 
 // POST /api/admin/upload — upload image + optionally update card
@@ -26,24 +25,50 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
     const ext = file.name.split(".").pop() || "png";
-    const fileName = `${randomUUID()}.${ext}`;
-    const filePath = join(process.cwd(), "public", "ai-gallery", fileName);
+    const galleryDir = join(process.cwd(), "public", "ai-gallery");
 
-    await mkdir(join(process.cwd(), "public", "ai-gallery"), { recursive: true });
-    await writeFile(filePath, buffer);
+    await mkdir(galleryDir, { recursive: true });
 
-    const imageUrl = `/ai-gallery/${fileName}`;
-
+    // If cardId provided, overwrite the scene's original file path
+    let imageUrl: string;
     if (cardId) {
-      await db.galleryCard.update({
-        where: { id: cardId },
-        data: { image: imageUrl },
-      });
+      const card = await db.galleryCard.findUnique({ where: { id: cardId } });
+      if (card) {
+        // Use the card's sceneId for the filename (e.g. scene-05.jpg)
+        const stableFileName = `${card.sceneId}.${ext}`;
+        const stablePath = join(galleryDir, stableFileName);
+        await writeFile(stablePath, buffer);
+        imageUrl = `/ai-gallery/${stableFileName}`;
+
+        // Delete old UUID file if it's different from the stable name
+        if (card.image && !card.image.includes(card.sceneId)) {
+          try {
+            const oldFile = join(process.cwd(), "public", card.image);
+            await unlink(oldFile);
+          } catch {}
+        }
+
+        await db.galleryCard.update({
+          where: { id: cardId },
+          data: { image: imageUrl },
+        });
+      } else {
+        // Card not found, save with UUID
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const filePath = join(galleryDir, fileName);
+        await writeFile(filePath, buffer);
+        imageUrl = `/ai-gallery/${fileName}`;
+      }
+    } else {
+      // No cardId — save with UUID
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const filePath = join(galleryDir, fileName);
+      await writeFile(filePath, buffer);
+      imageUrl = `/ai-gallery/${fileName}`;
     }
 
-    return NextResponse.json({ url: imageUrl, fileName, cardUpdated: !!cardId });
+    return NextResponse.json({ url: imageUrl, cardUpdated: !!cardId });
   } catch (error) {
     console.error("POST /api/admin/upload error:", error);
     return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
