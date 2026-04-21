@@ -497,6 +497,11 @@ export default function Home() {
                 account, no email, no credit card — ever.
               </motion.p>
 
+              {/* ── AD: Hero Inline (between text and CTA) ── */}
+              <div className="mt-8">
+                <AdBanner id="hero-inline" slot="hero-inline-728x90" label="728×90 — Hero Inline" dismissible />
+              </div>
+
               <motion.div
                 variants={fadeUp}
                 custom={3}
@@ -553,6 +558,11 @@ export default function Home() {
                   </div>
                 ))}
               </motion.div>
+
+              {/* ── AD: Hero Bottom (after trust badges) ── */}
+              <div className="mt-10">
+                <AdBanner id="hero-bottom" slot="hero-bottom-728x90" label="728×90 — Hero Bottom" dismissible />
+              </div>
             </motion.div>
           </div>
         </section>
@@ -562,6 +572,9 @@ export default function Home() {
 
         {/* ── AD: Below Gallery (Leaderboard) ── */}
         <AdBanner id="below-hero" slot="below-hero-728x90" label="728×90 Leaderboard — Below Gallery" dismissible />
+
+        {/* ── AD: Pre-Features ── */}
+        <AdBanner id="pre-features" slot="pre-features-728x90" label="728×90 — Pre Features" dismissible />
 
         {/* ═══════════════ FEATURES ═══════════════ */}
         <section className="py-20 sm:py-28" id="features" aria-labelledby="features-heading">
@@ -619,6 +632,9 @@ export default function Home() {
             </motion.div>
           </div>
         </section>
+
+        {/* ── AD: Post-Features ── */}
+        <AdBanner id="post-features" slot="post-features-728x90" label="728×90 — Post Features" dismissible />
 
         {/* ── AD: Between Features & How It Works ── */}
         <AdBanner id="mid-page-1" slot="mid-page-1-728x90" label="728×90 Leaderboard — Mid Page 1" dismissible />
@@ -840,6 +856,9 @@ export default function Home() {
               {/* ── AD: In-Article Midway ── */}
               <InContentAd id="in-article-1" slot="in-article-1-native" label="Native In-Article Ad — Midway" />
 
+              {/* ── AD: In-Article Encryption Section ── */}
+              <InContentAd id="in-article-1b" slot="in-article-1b-native" label="Native In-Article Ad — Encryption" />
+
               <motion.h3
                 variants={fadeUp}
                 custom={10}
@@ -920,6 +939,9 @@ export default function Home() {
               {/* ── AD: In-Article Lower ── */}
               <InContentAd id="in-article-2" slot="in-article-2-native" label="Native In-Article Ad — Lower" />
 
+              {/* ── AD: In-Article 3rd ── */}
+              <InContentAd id="in-article-3" slot="in-article-3-native" label="Native In-Article Ad — VPN Section" />
+
               <motion.h3
                 variants={fadeUp}
                 custom={16}
@@ -959,6 +981,9 @@ export default function Home() {
             </motion.div>
           </div>
         </article>
+
+        {/* ── AD: Post-Article ── */}
+        <AdBanner id="post-article" slot="post-article-728x90" label="728×90 — Post Article" dismissible />
 
         {/* ── AD: Between Article & FAQ ── */}
         <AdBanner id="pre-faq" slot="pre-faq-728x90" label="728×90 Leaderboard — Before FAQ" dismissible />
@@ -1023,6 +1048,9 @@ export default function Home() {
             </motion.div>
           </div>
         </section>
+
+        {/* ── AD: Post-FAQ ── */}
+        <AdBanner id="post-faq" slot="post-faq-728x90" label="728×90 — Post FAQ" dismissible />
 
         {/* ── AD: Between FAQ & Final CTA ── */}
         <AdBanner id="pre-cta" slot="pre-cta-728x90" label="728×90 Leaderboard — Before CTA" dismissible />
@@ -1137,6 +1165,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── AD: Post-Disclaimer ── */}
+        <AdBanner id="post-disclaimer" slot="post-disclaimer-728x90" label="728×90 — Post Disclaimer" dismissible />
+
       </main>
 
       {/* ── AD: Pre-Footer (after all main content) ── */}

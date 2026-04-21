@@ -598,6 +598,11 @@ export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupPr
                         )}
                       </div>
                     </div>
+
+                    {/* ── Ad: Below related content ── */}
+                    <div className="px-4 pb-4 sm:px-5">
+                      <PopupBanner id="popup-related-bottom" slot="popup-related-bottom" />
+                    </div>
                   </div>
                 </motion.div>
               )}
