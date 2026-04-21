@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   X,
   Shield,
@@ -13,45 +14,95 @@ import {
   ArrowRight,
   Lock,
   Monitor,
+  Eye,
+  ThumbsUp,
+  MessageCircle,
+  Share2,
+  Volume2,
+  Maximize2,
+  Settings,
+  SkipForward,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AD_CONFIG } from "@/lib/ad-config";
 
 /* ════════════════════════════════════════════════════════════════
-   WATCH NOW POPUP — AD-MONETIZED VERSION
-   Multi-step funnel:
-     Step 1: Age Verification Gate
-     Step 2: Ad Interstitial (5s countdown with ad slots)
-     Step 3: Fake "Loading video..." screen (2.5s) → Smartlink redirect
-   
+   WATCH NOW POPUP — REDESIGNED FLOW
+
+   Step 1:  Age Verification Gate
+   Step 2:  Loading Screen (2-3 sec fake loading)
+   Step 3:  Content Page (fake video player + small banner ad)
+   Step 4:  Click "Play" → Smartlink opens + Popunder (1st click only)
+
    Props:
    - open: boolean to show/hide popup
    - onClose: callback when popup is dismissed
-   
-   Ad Network Integration:
-   Replace the placeholder <div className="popup-ad-slot"> elements
-   with your real ad network code (Adsterra, PropellerAds, etc.)
+   - onContentClick: callback(contentId) for smartlink + popunder
    ════════════════════════════════════════════════════════════════ */
 
 interface WatchNowPopupProps {
   open: boolean;
   onClose: () => void;
-  /** @deprecated Use AD_CONFIG.adsterra.smartlinkUrl instead */
-  redirectUrl?: string;
+  onContentClick?: (contentId: string) => void;
 }
 
-const COUNTDOWN_SECONDS = 5;
 const LOADING_DURATION = AD_CONFIG.behavior.loadingScreenDuration;
 
-type PopupPhase = "loading" | "ads" | "ready" | "redirecting";
+/* Fake content data for the content page */
+const CONTENT_DATA = [
+  {
+    id: "featured-1",
+    title: "Exclusive Private Session — Premium HD",
+    channel: "VaultStream Originals",
+    views: "1.2M views",
+    likes: "48.7K",
+    time: "2 days ago",
+    duration: "18:42",
+    thumb: "/ai-gallery/scene-02.png",
+    description:
+      "Watch this exclusive premium content in full HD. Available only on VaultStream — the most trusted private streaming platform.",
+    tags: ["Exclusive", "HD", "Premium"],
+  },
+  {
+    id: "featured-2",
+    title: "Trending Now — Limited Time Only",
+    channel: "VS Premium",
+    views: "892K views",
+    likes: "37.1K",
+    time: "5 hours ago",
+    duration: "24:15",
+    thumb: "/ai-gallery/scene-08.png",
+    description:
+      "Most-watched content this week. Stream in 4K with zero buffering. Completely free, no signup required.",
+    tags: ["Trending", "4K", "New"],
+  },
+  {
+    id: "featured-3",
+    title: "Members Only Collection — Uncut Version",
+    channel: "VaultStream Gold",
+    views: "2.1M views",
+    likes: "92.4K",
+    time: "1 week ago",
+    duration: "32:08",
+    thumb: "/ai-gallery/scene-18.png",
+    description:
+      "Full uncut collection available now. End-to-end encrypted streaming with zero tracking. Watch privately.",
+    tags: ["Uncut", "Encrypted", "VIP"],
+  },
+];
 
-export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
-  const [proceeded, setProceeded] = useState(false);
-  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
-  const [phase, setPhase] = useState<PopupPhase>("loading");
+/* Randomly pick featured content per session */
+const FEATURED =
+  CONTENT_DATA[Math.floor(Math.random() * CONTENT_DATA.length)];
+
+export function WatchNowPopup({ open, onClose, onContentClick }: WatchNowPopupProps) {
+  const [step, setStep] = useState<"age-gate" | "loading" | "content">(
+    "age-gate"
+  );
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const contentClickedRef = useRef(false);
 
   // Lock body scroll when popup is open
   useEffect(() => {
@@ -65,102 +116,74 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
     };
   }, [open]);
 
-  // NOTE: State is reset via `key` prop in parent component (page.tsx)
-
-  // Countdown timer after proceeding past age gate
-  useEffect(() => {
-    if (!proceeded) return;
-
-    const loadingTimeout = setTimeout(() => {
-      setPhase("ads");
-    }, 800);
-
-    return () => clearTimeout(loadingTimeout);
-  }, [proceeded]);
-
-  useEffect(() => {
-    if (phase !== "ads") return;
-
-    timerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          setPhase("ready");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [phase]);
-
-  const handleProceed = useCallback(() => {
-    setProceeded(true);
-  }, []);
-
-  /* ── SMARTLINK REDIRECT WITH FAKE LOADING ── */
-  const handleContinue = useCallback(() => {
-    // Transition to fake loading screen
-    setPhase("redirecting");
-    setLoadingProgress(0);
-
-    // Animate loading progress bar
-    const progressInterval = setInterval(() => {
-      setLoadingProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + Math.random() * 15 + 5;
-      });
-    }, 200);
-
-    // After loading duration, redirect to smartlink
-    redirectTimerRef.current = setTimeout(() => {
-      clearInterval(progressInterval);
-      setLoadingProgress(100);
-
-      // Alternate between Adsterra and HilltopAds smartlinks for max revenue
-      const useHilltop = Math.random() < 0.5;
-      const smartlinkUrl = useHilltop
-        ? AD_CONFIG.hilltopAds.smartlinkUrl
-        : AD_CONFIG.adsterra.smartlinkUrl;
-      if (smartlinkUrl) {
-        window.open(smartlinkUrl, "_blank", "noopener,noreferrer");
-      }
-
-      // Small delay for the 100% to render, then close
-      setTimeout(() => {
-        onClose();
-      }, 300);
-    }, LOADING_DURATION);
-  }, [onClose]);
-
-  // Cleanup redirect timer on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
   }, []);
 
-  const handleClose = useCallback(() => {
-    if (!proceeded || phase === "redirecting") return;
-    onClose();
-  }, [proceeded, phase, onClose]);
+  // Transition from age gate → loading
+  const handleAgeConfirm = useCallback(() => {
+    setStep("loading");
+    setLoadingProgress(0);
 
-  // ESC key to close (only after age gate, not during redirect)
+    // Animate progress bar
+    progressIntervalRef.current = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 88) {
+          if (progressIntervalRef.current)
+            clearInterval(progressIntervalRef.current);
+          return 88;
+        }
+        return prev + Math.random() * 12 + 4;
+      });
+    }, 150);
+
+    // After loading duration, show content page
+    redirectTimerRef.current = setTimeout(() => {
+      if (progressIntervalRef.current)
+        clearInterval(progressIntervalRef.current);
+      setLoadingProgress(100);
+
+      // Small delay to show 100%, then transition
+      setTimeout(() => {
+        setStep("content");
+      }, 400);
+    }, LOADING_DURATION);
+  }, []);
+
+  // Content play click → smartlink + popunder
+  const handlePlayClick = useCallback(
+    (contentId: string) => {
+      if (contentClickedRef.current) return;
+      contentClickedRef.current = true;
+
+      // Notify parent to trigger popunder + smartlink
+      if (onContentClick) {
+        onContentClick(contentId);
+      }
+    },
+    [onContentClick]
+  );
+
+  // Close handler (only after age gate)
+  const handleClose = useCallback(() => {
+    if (step === "age-gate" || step === "loading") return;
+    onClose();
+  }, [step, onClose]);
+
+  // ESC to close (only on content step)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && proceeded && phase !== "redirecting") {
+      if (e.key === "Escape" && step === "content") {
         handleClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [proceeded, phase, handleClose]);
+  }, [step, handleClose]);
 
   return (
     <AnimatePresence>
@@ -172,8 +195,10 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
-            onClick={proceeded && phase !== "redirecting" ? handleClose : undefined}
+            className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-sm"
+            onClick={
+              step === "content" ? handleClose : undefined
+            }
             aria-hidden="true"
           />
 
@@ -183,16 +208,16 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-[201] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[201] flex items-center justify-center p-2 sm:p-4"
             role="dialog"
             aria-modal="true"
-            aria-label="Access verification"
+            aria-label="Content access"
           >
             <AnimatePresence mode="wait">
-              {!proceeded ? (
-                /* ════════════════════════════════════════════════════
-                   STEP 1: AGE VERIFICATION GATE
-                   ════════════════════════════════════════════════════ */
+              {/* ════════════════════════════════════════════════════
+                 STEP 1: AGE VERIFICATION GATE
+                 ════════════════════════════════════════════════════ */}
+              {step === "age-gate" && (
                 <motion.div
                   key="age-gate"
                   initial={{ opacity: 0, y: 30 }}
@@ -202,9 +227,11 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
                   className="glass-card relative w-full max-w-md rounded-2xl border border-white/10 p-8 text-center"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Warning icon */}
                   <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-rose-500/20 to-violet-500/20">
-                    <AlertTriangle className="h-8 w-8 text-rose-400" aria-hidden="true" />
+                    <AlertTriangle
+                      className="h-8 w-8 text-rose-400"
+                      aria-hidden="true"
+                    />
                   </div>
 
                   <h2 className="text-xl font-bold sm:text-2xl">
@@ -212,46 +239,55 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
                   </h2>
 
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                    This platform contains <strong className="text-foreground/80">adult content</strong> that is
-                    intended for individuals aged 18 and above. By proceeding, you confirm
-                    that you are of legal age in your jurisdiction to view such content.
+                    This platform contains{" "}
+                    <strong className="text-foreground/80">adult content</strong>{" "}
+                    that is intended for individuals aged 18 and above. By
+                    proceeding, you confirm that you are of legal age in your
+                    jurisdiction.
                   </p>
 
-                  {/* Trust indicators */}
                   <div className="mt-5 flex items-center justify-center gap-3">
                     <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-muted-foreground">
-                      <Shield className="h-3 w-3 text-rose-400" aria-hidden="true" />
+                      <Shield
+                        className="h-3 w-3 text-rose-400"
+                        aria-hidden="true"
+                      />
                       AES-256 Encrypted
                     </div>
                     <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-muted-foreground">
-                      <Lock className="h-3 w-3 text-rose-400" aria-hidden="true" />
+                      <Lock
+                        className="h-3 w-3 text-rose-400"
+                        aria-hidden="true"
+                      />
                       Zero Logging
                     </div>
                   </div>
 
-                  {/* Proceed button */}
                   <Button
-                    onClick={handleProceed}
+                    onClick={handleAgeConfirm}
                     size="lg"
                     className="mt-6 animate-glow w-full rounded-xl bg-gradient-to-r from-rose-500 to-violet-500 px-6 text-base font-semibold text-white hover:from-rose-600 hover:to-violet-600 transition-all duration-300"
                   >
                     I Am 18+ — Enter Now
-                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                    <ArrowRight
+                      className="ml-2 h-4 w-4"
+                      aria-hidden="true"
+                    />
                   </Button>
 
                   <p className="mt-4 text-[11px] text-muted-foreground/60">
-                    By entering, you agree to our Terms of Service and confirm you are
-                    at least 18 years old.
+                    By entering, you agree to our Terms of Service and confirm
+                    you are at least 18 years old.
                   </p>
                 </motion.div>
-              ) : phase === "redirecting" ? (
-                /* ════════════════════════════════════════════════════
-                   STEP 3: FAKE LOADING SCREEN (conversion boost)
-                   Shows "Loading video..." with progress bar for 2.5s
-                   then redirects to Adsterra smartlink
-                   ════════════════════════════════════════════════════ */
+              )}
+
+              {/* ════════════════════════════════════════════════════
+                 STEP 2: LOADING SCREEN (2-3 sec)
+                 ════════════════════════════════════════════════════ */}
+              {step === "loading" && (
                 <motion.div
-                  key="loading-screen"
+                  key="loading"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -259,32 +295,37 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
                   className="glass-card relative w-full max-w-md rounded-2xl border border-white/10 p-8 text-center"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Spinning loader */}
                   <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-rose-500/20 to-violet-500/20">
                     <div className="relative">
-                      <Loader2 className="h-10 w-10 animate-spin text-rose-400" aria-hidden="true" />
-                      <Play className="absolute inset-0 m-auto h-4 w-4 fill-white text-white" aria-hidden="true" />
+                      <Loader2
+                        className="h-10 w-10 animate-spin text-rose-400"
+                        aria-hidden="true"
+                      />
+                      <Play
+                        className="absolute inset-0 m-auto h-4 w-4 fill-white text-white"
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
 
                   <h2 className="text-lg font-bold sm:text-xl">
-                    Loading Video…
+                    Loading Content…
                   </h2>
 
                   <p className="mt-2 text-sm text-muted-foreground">
                     Connecting to secure encrypted stream
                   </p>
 
-                  {/* Progress bar */}
                   <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                     <motion.div
                       className="h-full rounded-full bg-gradient-to-r from-rose-500 to-violet-500"
-                      animate={{ width: `${Math.min(loadingProgress, 100)}%` }}
+                      animate={{
+                        width: `${Math.min(loadingProgress, 100)}%`,
+                      }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
                     />
                   </div>
 
-                  {/* Loading details */}
                   <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground/60">
                     <span className="flex items-center gap-1">
                       <Monitor className="h-3 w-3" aria-hidden="true" />
@@ -304,148 +345,266 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
                     Please wait while we prepare your content…
                   </p>
                 </motion.div>
-              ) : (
-                /* ════════════════════════════════════════════════════
-                   STEP 2: AD INTERSTITIAL
-                   ════════════════════════════════════════════════════ */
+              )}
+
+              {/* ════════════════════════════════════════════════════
+                 STEP 3: CONTENT PAGE (fake video + banner ad)
+                 ════════════════════════════════════════════════════ */}
+              {step === "content" && (
                 <motion.div
-                  key="ad-interstitial"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-card relative flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10"
+                  key="content"
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="glass-card relative flex w-full max-w-4xl max-h-[92vh] flex-col overflow-hidden rounded-2xl border border-white/10"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Header bar */}
-                  <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 sm:px-6">
-                    <div className="flex items-center gap-2">
-                      <Play className="h-4 w-4 text-rose-400" aria-hidden="true" />
-                      <span className="text-sm font-semibold">
-                        VaultStream
+                  {/* ── Top bar ── */}
+                  <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5 sm:px-5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-violet-500">
+                        <Play
+                          className="h-3 w-3 fill-white text-white"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <span className="text-sm font-bold tracking-tight">
+                        Vault<span className="text-gradient">Stream</span>
+                      </span>
+                      <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-muted-foreground">
+                        <Shield
+                          className="h-2.5 w-2.5 text-emerald-400"
+                          aria-hidden="true"
+                        />
+                        Secure
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      {/* Countdown / status */}
-                      {phase === "loading" && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-                          Loading...
-                        </div>
-                      )}
-                      {phase === "ads" && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3 text-rose-400" aria-hidden="true" />
-                          Please wait {countdown}s...
-                        </div>
-                      )}
-                      {phase === "ready" && (
-                        <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-                          <Shield className="h-3 w-3" aria-hidden="true" />
-                          Ready
-                        </div>
-                      )}
-
-                      {/* Close button (only after proceeding) */}
-                      <button
-                        onClick={handleClose}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors"
-                        aria-label="Close popup"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleClose}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
 
-                  {/* Progress bar */}
-                  <div className="h-0.5 w-full bg-white/5">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-rose-500 to-violet-500"
-                      initial={{ width: "0%" }}
-                      animate={{
-                        width: phase === "ready" ? "100%" : `${((COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS) * 100}%`,
+                  {/* ── Scrollable content ── */}
+                  <div className="flex-1 overflow-y-auto">
+                    {/* Fake Video Player */}
+                    <div
+                      className="relative aspect-video w-full cursor-pointer overflow-hidden bg-black"
+                      onClick={() => handlePlayClick(FEATURED.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handlePlayClick(FEATURED.id);
+                        }
                       }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
-                    />
-                  </div>
-
-                  {/* Ad content area */}
-                  <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div className="flex flex-col gap-4">
-                      {/* ── Ad Slot 1: Top Leaderboard ── */}
-                      <PopupAdSlot
-                        label="728×90 Leaderboard — Popup Top"
-                        slot="popup-top-728x90"
-                        width="100%"
-                        height="90px"
-                        visible={phase !== "loading"}
+                      aria-label={`Play ${FEATURED.title}`}
+                    >
+                      <Image
+                        src={FEATURED.thumb}
+                        alt={FEATURED.title}
+                        fill
+                        className="object-cover transition-transform duration-500 hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 896px"
+                        priority
                       />
 
-                      {/* ── Ad Slot 2 & 3: Side-by-side rectangles ── */}
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <PopupAdSlot
-                          label="300×250 Rectangle — Popup Left"
-                          slot="popup-left-300x250"
-                          width="100%"
-                          height="250px"
-                          visible={phase !== "loading"}
-                        />
-                        <PopupAdSlot
-                          label="300×250 Rectangle — Popup Right"
-                          slot="popup-right-300x250"
-                          width="100%"
-                          height="250px"
-                          visible={phase !== "loading"}
-                        />
+                      {/* Dark overlay */}
+                      <div className="absolute inset-0 bg-black/30 transition-colors duration-300 hover:bg-black/20" />
+
+                      {/* Center play button */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur-md shadow-2xl transition-all duration-300 hover:bg-white/30"
+                        >
+                          <Play
+                            className="h-8 w-8 fill-white text-white ml-1"
+                            aria-hidden="true"
+                          />
+                        </motion.div>
                       </div>
 
-                      {/* ── Ad Slot 4: Native in-content ── */}
-                      <PopupAdSlot
-                        label="Native Ad — Popup Mid"
-                        slot="popup-mid-native"
-                        width="100%"
-                        height="120px"
-                        visible={phase !== "loading"}
-                      />
+                      {/* Duration badge */}
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-md bg-black/70 px-2 py-1 text-xs text-white/90 backdrop-blur-sm font-medium">
+                        {FEATURED.duration}
+                      </div>
 
-                      {/* ── Ad Slot 5: Bottom Leaderboard ── */}
-                      <PopupAdSlot
-                        label="728×90 Leaderboard — Popup Bottom"
-                        slot="popup-bottom-728x90"
-                        width="100%"
-                        height="90px"
-                        visible={phase !== "loading"}
-                      />
+                      {/* Bottom controls bar */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 pt-8 pb-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                        <div className="h-1 w-full rounded-full bg-white/20 mb-3">
+                          <div className="h-full w-1/3 rounded-full bg-rose-500" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Footer CTA */}
-                  <div className="border-t border-white/5 px-4 py-4 sm:px-6">
-                    {phase === "ready" ? (
-                      <Button
-                        onClick={handleContinue}
-                        size="lg"
-                        className="animate-glow w-full rounded-xl bg-gradient-to-r from-rose-500 to-violet-500 px-6 text-base font-semibold text-white hover:from-rose-600 hover:to-violet-600 transition-all duration-300"
-                      >
-                        <Play className="mr-2 h-5 w-5 fill-white" aria-hidden="true" />
-                        Continue Watching
-                        <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    ) : (
-                      <Button
-                        size="lg"
-                        disabled
-                        className="w-full rounded-xl bg-white/5 text-muted-foreground cursor-not-allowed"
-                      >
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                        Preparing your content...
-                      </Button>
-                    )}
+                    {/* ── Banner Ad (below player) ── */}
+                    <div
+                      className="mx-4 mt-3 sm:mx-5"
+                      data-ad-slot="content-page-banner"
+                    >
+                      <div className="flex items-center justify-center rounded-lg border border-white/5 bg-white/[0.02] px-4 py-2.5">
+                        {/*
+                          ╔═══════════════════════════════════════╗
+                          ║  REPLACE WITH REAL AD CODE             ║
+                          ║  Adsterra / HilltopAds banner          ║
+                          ╚═══════════════════════════════════════╝
+                        */}
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/30">
+                          Advertisement
+                        </span>
+                      </div>
+                    </div>
 
-                    <p className="mt-2 text-center text-[11px] text-muted-foreground/50">
-                      Content will open in a new tab. Your connection remains encrypted.
-                    </p>
+                    {/* ── Video Info ── */}
+                    <div className="px-4 pt-4 pb-2 sm:px-5">
+                      <h2 className="text-base font-bold sm:text-lg leading-snug">
+                        {FEATURED.title}
+                      </h2>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" aria-hidden="true" />
+                          {FEATURED.views}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ThumbsUp className="h-3 w-3" aria-hidden="true" />
+                          {FEATURED.likes}
+                        </span>
+                        <span>{FEATURED.time}</span>
+                        <span className="flex items-center gap-1 text-rose-400">
+                          <Shield className="h-3 w-3" aria-hidden="true" />
+                          Encrypted
+                        </span>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="mt-3 flex items-center gap-2">
+                        <button className="flex items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground">
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                          Like
+                        </button>
+                        <button className="flex items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground">
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          Comment
+                        </button>
+                        <button className="flex items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground">
+                          <Share2 className="h-3.5 w-3.5" />
+                          Share
+                        </button>
+                      </div>
+
+                      {/* Channel info */}
+                      <div className="mt-4 flex items-center gap-3 border-t border-white/5 pt-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-rose-500/30 to-violet-500/30 text-xs font-bold">
+                          VS
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate">
+                            {FEATURED.channel}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {Math.floor(Math.random() * 500 + 200)}K
+                            subscribers
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => handlePlayClick(FEATURED.id)}
+                          size="sm"
+                          className="rounded-lg bg-gradient-to-r from-rose-500 to-violet-500 px-4 text-xs font-semibold text-white hover:from-rose-600 hover:to-violet-600 transition-all"
+                        >
+                          <Play
+                            className="mr-1.5 h-3 w-3 fill-white"
+                            aria-hidden="true"
+                          />
+                          Watch Now
+                        </Button>
+                      </div>
+
+                      {/* Description */}
+                      <div className="mt-4 rounded-xl bg-white/[0.03] border border-white/5 p-3.5">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {FEATURED.description}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {FEATURED.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-muted-foreground"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Related Content Grid ── */}
+                    <div className="px-4 py-4 sm:px-5">
+                      <h3 className="mb-3 text-sm font-semibold">
+                        Related Content
+                      </h3>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        {CONTENT_DATA.filter((c) => c.id !== FEATURED.id).map(
+                          (item) => (
+                            <div
+                              key={item.id}
+                              className="group cursor-pointer rounded-xl border border-white/5 bg-white/[0.02] overflow-hidden transition-all duration-300 hover:border-rose-500/30 hover:bg-white/[0.04]"
+                              onClick={() => handlePlayClick(item.id)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handlePlayClick(item.id);
+                                }
+                              }}
+                              aria-label={`Play ${item.title}`}
+                            >
+                              <div className="relative aspect-video overflow-hidden">
+                                <Image
+                                  src={item.thumb}
+                                  alt={item.title}
+                                  fill
+                                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                  sizes="(max-width: 640px) 100vw, 33vw"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                                <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white/80">
+                                  {item.duration}
+                                </div>
+                                {/* Hover play icon */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                                    <Play
+                                      className="h-4 w-4 fill-white text-white ml-0.5"
+                                      aria-hidden="true"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="p-2.5">
+                                <div className="text-xs font-medium leading-tight line-clamp-2">
+                                  {item.title}
+                                </div>
+                                <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                                  <span>{item.channel}</span>
+                                  <span>•</span>
+                                  <span>{item.views}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -454,100 +613,5 @@ export function WatchNowPopup({ open, onClose }: WatchNowPopupProps) {
         </>
       )}
     </AnimatePresence>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════
-   POPUP AD SLOT
-   Placeholder ad slot for the interstitial popup.
-   Replace inner content with real ad network code.
-   ════════════════════════════════════════════════════════════════ */
-
-function PopupAdSlot({
-  label,
-  slot,
-  width,
-  height,
-  visible,
-}: {
-  label: string;
-  slot: string;
-  width: string;
-  height: string;
-  visible: boolean;
-}) {
-  const [show, setShow] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (visible) {
-      timeoutRef.current = setTimeout(() => setShow(true), 200);
-    } else {
-      timeoutRef.current = setTimeout(() => setShow(false), 0);
-    }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [visible]);
-
-  if (!show) {
-    return (
-      <div
-        className="rounded-lg bg-white/[0.03] border border-white/5"
-        style={{ width, height: height === "100%" ? undefined : height, minHeight: height }}
-        data-ad-slot={slot}
-        aria-label="Advertisement"
-      >
-        <div className="flex h-full w-full items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/20" aria-hidden="true" />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="popup-ad-slot rounded-lg bg-white/[0.03] border border-white/5 overflow-hidden"
-      style={{ width, minHeight: height }}
-      data-ad-slot={slot}
-      aria-label="Advertisement"
-      role="complementary"
-    >
-      {/*
-        ╔═══════════════════════════════════════════════════════╗
-        ║  REPLACE THIS CONTENT WITH YOUR REAL AD CODE          ║
-        ║                                                       ║
-        ║  Example — Adsterra:                                 ║
-        ║  <div id="{slot}">                                    ║
-        ║    <script src="//ad-network.com/tag.js" />          ║
-        ║  </div>                                               ║
-        ╚═══════════════════════════════════════════════════════╝
-      */}
-      <div className="flex h-full w-full items-center justify-center p-4">
-        <div className="text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-white/10">
-            <svg
-              className="h-5 w-5 text-muted-foreground/25"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-6v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 6v-4.5m0 4.5h-4.5m4.5 0L15 15"
-              />
-            </svg>
-          </div>
-          <span className="block text-[10px] uppercase tracking-widest text-muted-foreground/30">
-            {label}
-          </span>
-          <span className="block mt-0.5 text-[10px] text-muted-foreground/20">
-            Slot: {slot}
-          </span>
-        </div>
-      </div>
-    </div>
   );
 }

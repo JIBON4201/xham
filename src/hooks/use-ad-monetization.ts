@@ -14,11 +14,11 @@ import {
    FUNNEL FLOW:
    ┌─────────────────────────────────────────────────────────┐
    │ 1. First click ANYWHERE on page                         │
-   │    → Trigger Adsterra popunder (once per 24h)           │
+   │    → Pre-load popunder script (once per 24h)           │
    │                                                         │
-   │ 2. Click on CTA button (Watch / Play / Access / etc.)   │
-   │    → Open popup with loading + ads                     │
-   │    → On "Continue" click → redirect to smartlink        │
+   │ 2. Click CTA (Watch / Play / card)                     │
+   │    → Open popup: Age Gate → Loading → Content Page     │
+   │    → Click content → smartlink + popunder (1st only)   │
    │                                                         │
    │ 3. User scrolls down 30%+ of page                       │
    │    → Trigger HilltopAds push notification (once/session)│
@@ -34,10 +34,9 @@ const KEYS = AD_CONFIG.storageKeys;
 function loadScriptOnce(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!url) {
-      resolve(); // no URL configured — silently skip
+      resolve();
       return;
     }
-    // Check if already loaded
     if (document.querySelector(`script[src="${url}"]`)) {
       resolve();
       return;
@@ -46,14 +45,12 @@ function loadScriptOnce(url: string): Promise<void> {
     script.src = url;
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () => resolve(); // Don't block on ad script errors
+    script.onerror = () => resolve();
     document.head.appendChild(script);
   });
 }
 
 export function useAdMonetization() {
-  const popunderTriggered = useRef(false);
-  const pushTriggered = useRef(false);
   const initialized = useRef(false);
 
   /* ── ADSTERRA POPUNDER: Load script on mount ── */
@@ -61,30 +58,14 @@ export function useAdMonetization() {
     if (initialized.current) return;
     initialized.current = true;
 
-    // Pre-load the Adsterra popunder script (non-blocking)
     loadScriptOnce(AD_CONFIG.adsterra.popunderScriptUrl);
   }, []);
 
-  /* ── FIRST CLICK HANDLER: Trigger popunder ── */
+  /* ── FIRST CLICK HANDLER: Mark first interaction ── */
   useEffect(() => {
     const handleFirstClick = () => {
-      // Check if already done this session
       if (sessionStorage.getItem(KEYS.firstClickDone)) return;
-
-      // Check daily cap
-      if (!checkDailyCap(KEYS.popunderCountToday, AD_CONFIG.adsterra.dailyCap)) {
-        return;
-      }
-
-      // Mark as done
-      popunderTriggered.current = true;
       sessionStorage.setItem(KEYS.firstClickDone, "1");
-      incrementDailyCap(KEYS.popunderCountToday);
-
-      // If popunder script URL is set, it's already loaded above
-      // Adsterra popunder scripts auto-bind to clicks — our script
-      // pre-loading handles the trigger. If manual trigger needed:
-      // The script typically binds itself to the next user click.
     };
 
     document.addEventListener("click", handleFirstClick, { once: true });
@@ -93,49 +74,73 @@ export function useAdMonetization() {
 
   /* ── SCROLL HANDLER: Trigger push notification ── */
   useEffect(() => {
-    if (pushTriggered.current) return;
     if (sessionStorage.getItem(KEYS.pushRequested)) return;
 
     const handleScroll = () => {
-      if (pushTriggered.current) return;
-
       const scrollPercent =
         (window.scrollY /
           (document.documentElement.scrollHeight - window.innerHeight)) *
         100;
 
       if (scrollPercent >= AD_CONFIG.behavior.pushScrollThreshold) {
-        pushTriggered.current = true;
         sessionStorage.setItem(KEYS.pushRequested, "1");
 
-        // Load push notification script after scroll threshold
         setTimeout(() => {
           loadScriptOnce(AD_CONFIG.hilltopAds.pushScriptUrl);
         }, AD_CONFIG.behavior.pushScrollDelay);
       }
     };
 
-    // Use passive listener for scroll performance
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const handleScrollRef = handleScroll;
+    window.addEventListener("scroll", handleScrollRef, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollRef);
   }, []);
 
-  /* ── CTA CLICK HANDLER: Smartlink redirect with loading effect ── */
+  /* ── POPUNDER TRIGGER: For popup content clicks ── */
+  const triggerPopunder = useCallback(() => {
+    // Only fire once per session
+    if (sessionStorage.getItem(KEYS.popupPopunderDone)) return false;
+    if (!checkDailyCap(KEYS.popunderCountToday, AD_CONFIG.adsterra.dailyCap))
+      return false;
+
+    // Mark as done
+    sessionStorage.setItem(KEYS.popupPopunderDone, "1");
+    incrementDailyCap(KEYS.popunderCountToday);
+
+    // Use Adsterra popunder URL (smartlink as fallback popunder)
+    const popunderUrl = AD_CONFIG.adsterra.smartlinkUrl;
+    if (!popunderUrl) return false;
+
+    // Open a popunder window — opens behind the main window
+    try {
+      const popunder = window.open(popunderUrl, "_blank", "noopener,noreferrer");
+      if (popunder) {
+        // Immediately blur so it goes behind the current window
+        popunder.blur();
+        // Try to refocus the main window
+        window.focus();
+      }
+    } catch {
+      // Blocked by popup blocker — silently fail
+    }
+
+    return true;
+  }, []);
+
+  /* ── SMARTLINK REDIRECT: 50/50 Adsterra / HilltopAds ── */
   const triggerSmartlinkRedirect = useCallback(() => {
-    // Alternate between Adsterra and HilltopAds smartlinks
     const useHilltop = Math.random() < 0.5;
     const url = useHilltop
       ? AD_CONFIG.hilltopAds.smartlinkUrl
       : AD_CONFIG.adsterra.smartlinkUrl;
     if (!url) return false;
 
-    // Open smartlink in a new tab
     window.open(url, "_blank", "noopener,noreferrer");
     return true;
   }, []);
 
   return {
-    /** Call this when user clicks a CTA button. Opens smartlink in new tab. */
     triggerSmartlinkRedirect,
+    triggerPopunder,
   };
 }

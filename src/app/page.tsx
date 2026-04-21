@@ -351,7 +351,7 @@ export default function Home() {
   const [popupKey, setPopupKey] = useState(0);
 
   // Initialize ad monetization (popunder on first click, push on scroll)
-  const { triggerSmartlinkRedirect } = useAdMonetization();
+  const { triggerSmartlinkRedirect, triggerPopunder } = useAdMonetization();
 
   const openPopup = useCallback(() => {
     setPopupKey((k) => k + 1);
@@ -359,10 +359,23 @@ export default function Home() {
   }, []);
   const closePopup = useCallback(() => setPopupOpen(false), []);
 
+  // Content click inside popup → popunder (1st only) + smartlink redirect
+  const handlePopupContentClick = useCallback(
+    (_contentId: string) => {
+      // Fire popunder on first content click
+      triggerPopunder();
+      // Then open smartlink
+      setTimeout(() => {
+        triggerSmartlinkRedirect();
+      }, 300);
+    },
+    [triggerPopunder, triggerSmartlinkRedirect]
+  );
+
   return (
     <>
     {/* ── Watch Now Popup ── */}
-    <WatchNowPopup key={popupKey} open={popupOpen} onClose={closePopup} />
+    <WatchNowPopup key={popupKey} open={popupOpen} onClose={closePopup} onContentClick={handlePopupContentClick} />
     <div className="noise-overlay relative min-h-screen overflow-x-hidden">
       {/* JSON-LD Structured Data */}
       <JsonLd />

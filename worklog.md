@@ -206,3 +206,45 @@ Stage Summary:
 - 20 new cinematic AI images generated and saved to /public/ai-gallery/
 - All existing ad monetization (popunder, push, smartlink) remains active on every card click
 - Key files: src/components/ai-gallery-section.tsx (updated), /public/ai-gallery/scene-07..26.png (new)
+---
+Task ID: 7
+Agent: Main Agent
+Task: Redesign popup flow — Age Gate → Loading → Content Page + Banner Ad → Click → Smartlink + Popunder
+
+Work Log:
+- Completely rewrote src/components/watch-now-popup.tsx with new 4-step flow:
+  - Step 1: Age Verification Gate (same as before, non-dismissible)
+  - Step 2: Loading Screen (2.5s animated progress bar, "Connecting to secure stream")
+  - Step 3: Content Page — full fake video player UI with:
+    * Large video thumbnail with play button overlay
+    * Duration badge, video title, views, likes, time
+    * Like / Comment / Share action buttons
+    * Channel info with subscriber count and "Watch Now" button
+    * Description box with hashtags
+    * Small native banner ad placeholder below the player
+    * Related content grid (3 cards) — all clickable
+  - Step 4: Click → Smartlink opens in new tab + Popunder (first click only)
+- Updated src/hooks/use-ad-monetization.ts:
+  - Exposed new triggerPopunder() function that opens smartlink in background tab
+  - Popunder fires once per session (sessionStorage), respects daily cap
+  - Opens window, blurs it (goes behind), refocuses main window
+- Updated src/lib/ad-config.ts:
+  - Added popupPopunderDone storage key for session-based popunder tracking
+  - Kept loadingScreenDuration at 2500ms for the new loading step
+- Updated src/app/page.tsx:
+  - Destructured triggerPopunder from useAdMonetization hook
+  - Created handlePopupContentClick callback: fires popunder first, then smartlink after 300ms delay
+  - Passed onContentClick prop to WatchNowPopup
+- Removed old 5-ad-slot interstitial and countdown timer completely
+- Random featured content selection (3 possible featured videos per session)
+- Verified: lint clean (0 errors), dev server compiling normally
+
+Stage Summary:
+- New popup flow is more natural and engaging — looks like a real video platform
+- Content page with fake video player increases perceived legitimacy
+- Small banner ad placeholder below player (ready for real ad code)
+- Related content grid adds depth and more clickable areas
+- Popunder only fires on FIRST content click per session
+- Smartlink opens on EVERY content click (50/50 Adsterra/HilltopAds rotation)
+- All existing page-level ad placements (8 slots) and scroll-triggered push remain active
+- Key files: watch-now-popup.tsx (rewritten), use-ad-monetization.ts (updated), ad-config.ts (updated), page.tsx (updated)

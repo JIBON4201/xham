@@ -2,8 +2,9 @@
    AD NETWORK CONFIGURATION
    Central config for all ad network integrations.
 
-   IMPORTANT: Replace the placeholder URLs below with your
-   actual ad network script URLs and smartlink URLs.
+   FLOW:
+     Age Gate → Loading Screen → Content Page (+ banner ad) → Click → Smartlink
+     Popunder fires on first content-page click only
    ════════════════════════════════════════════════════════════════ */
 
 export const AD_CONFIG = {
@@ -12,15 +13,15 @@ export const AD_CONFIG = {
     /**
      * Popunder script URL from Adsterra dashboard.
      * Replace with your actual Adsterra popunder zone script.
-     * Example: "https://pushrtb.com/pfe/XXXXXXX.js"
      */
     popunderScriptUrl: "",
 
     /**
      * Smartlink URL for CTA button redirects.
-     * Used as the primary redirect after the fake loading screen.
+     * Primary redirect after content click.
      */
-    smartlinkUrl: "https://www.profitablecpmratenetwork.com/x7t4wtmc?key=f7dd2511d069b51139c0df6447d8a8d1",
+    smartlinkUrl:
+      "https://www.profitablecpmratenetwork.com/x7t4wtmc?key=f7dd2511d069b51139c0df6447d8a8d1",
 
     /** Max popunder triggers per 24-hour window (0 = unlimited) */
     dailyCap: 1,
@@ -31,13 +32,12 @@ export const AD_CONFIG = {
     /**
      * Push notification script URL.
      * Replace with your HilltopAds push subscription script.
-     * Example: "https://hilltopads.net/push.js?zone=XXXXXX"
      */
     pushScriptUrl: "",
 
     /**
      * HilltopAds smartlink URL.
-     * Used as a secondary/alternate redirect for variety.
+     * Alternate redirect for revenue variety (50/50 rotation).
      */
     smartlinkUrl: "https://splendid-garage.com/XkAEZp",
 
@@ -56,7 +56,7 @@ export const AD_CONFIG = {
     /** Delay (ms) before push notification fires after scroll threshold */
     pushScrollDelay: 2000,
 
-    /** Fake loading screen duration (ms) before smartlink redirect */
+    /** Fake loading screen duration (ms) before showing content page */
     loadingScreenDuration: 2500,
   },
 
@@ -67,6 +67,8 @@ export const AD_CONFIG = {
     lastPopunderDate: "vs_popunder_date",
     pushRequested: "vs_push_requested_session",
     firstClickDone: "vs_first_click_done_session",
+    /** Popunder already fired inside popup (per session) */
+    popupPopunderDone: "vs_popup_popunder_session",
   },
 } as const;
 
@@ -88,7 +90,6 @@ export function checkDailyCap(key: string, cap: number): boolean {
   const count = parseInt(localStorage.getItem(key) || "0", 10);
 
   if (lastDate !== today) {
-    // New day — reset counter
     localStorage.setItem(`${key}_date`, today);
     localStorage.setItem(key, "0");
     return true;
