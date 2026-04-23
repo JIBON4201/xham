@@ -190,7 +190,7 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
 
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-muted-foreground">
             <Eye className="h-3.5 w-3.5 text-rose-400" aria-hidden="true" />
-            <span>{cards.length}+ AI visuals available</span>
+            <span>{cards.length}+ visuals available</span>
           </div>
         </motion.div>
 
