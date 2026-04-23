@@ -476,7 +476,7 @@ export default function Home() {
                 id="hero-heading"
                 className="text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl md:text-6xl"
               >
-                AI Generated{" "}
+                VIRAL Video{" "}
                 <span className="text-gradient">Visual Preview</span> Gallery
               </motion.h1>
 
@@ -485,8 +485,8 @@ export default function Home() {
                 custom={2}
                 className="mx-auto mt-6 max-w-xl text-base text-muted-foreground sm:text-lg"
               >
-                Browse trending AI-generated images and short cinematic clips.
-                Explore our curated collection of exclusive visual content — no signup required.
+                XNXX delivers free sex movies and fast free porn videos (tube porn).
+                Now 10 million+ sex vids available for free! Featuring hot pussy, sexy girls.
               </motion.p>
 
               <motion.div
