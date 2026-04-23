@@ -134,10 +134,9 @@ export default function RootLayout({
       <head>
         {/* Preconnect to critical origins */}
         <link rel="preconnect" href={SITE_URL} />
-        {/* Preload hero image for LCP */}
-       
-        {/* Verification placeholder (replace with real keys) */}
-        <meta name="google-site-verification" content="0GDeDF84F2MqU6LjqWzbeXS37EOJCWbGHUYWp3VfcSA" />.
+        {/* Google Search Console verification */}
+        <meta name="google-site-verification" content="0GDeDF84F2MqU6LjqWzbeXS37EOJCWbGHUYWp3VfcSA" />
+        {/* Bing Webmaster Tools (replace with real code) */}
         <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
       </head>
       <body
