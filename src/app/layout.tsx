@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 import { AdScriptsProvider } from "@/components/ad-scripts-provider";
 
 const geistSans = Geist({
@@ -135,12 +135,7 @@ export default function RootLayout({
         {/* Preconnect to critical origins */}
         <link rel="preconnect" href={SITE_URL} />
         {/* Preload hero image for LCP */}
-        <link
-          rel="preload"
-          as="image"
-          href="/hero-bg.png"
-          type="image/png"
-        />
+       
         {/* Verification placeholder (replace with real keys) */}
         <meta name="google-site-verification" content="0GDeDF84F2MqU6LjqWzbeXS37EOJCWbGHUYWp3VfcSA" />.
         <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
