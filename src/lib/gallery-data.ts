@@ -24,11 +24,9 @@ export interface StaticGalleryCard {
 }
 
 const STATIC_CARDS: StaticGalleryCard[] = [
-  { id: "static-01", sceneId: "scene-01", title: "Neon Metropolis", tag: "AI Preview", image: "/ai-gallery/scene-01.webp", duration: "2:34", views: "14.2K", icon: "Sparkles", category: "all", order: 1, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-02", sceneId: "scene-02", title: "Cosmic Nebula", tag: "Featured Preview", image: "/ai-gallery/scene-02.jpg", duration: "3:18", views: "22.8K", icon: "TrendingUp", category: "all", order: 2, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-03", sceneId: "scene-03", title: "Deep Ocean Dreams", tag: "AI Preview", image: "/ai-gallery/scene-03.jpg", duration: "1:52", views: "9.7K", icon: "Sparkles", category: "all", order: 3, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-04", sceneId: "scene-04", title: "Liquid Chrome", tag: "Trending Visual", image: "/ai-gallery/scene-04.jpeg", duration: "2:07", views: "18.3K", icon: "TrendingUp", category: "all", order: 4, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
-  { id: "static-05", sceneId: "scene-05", title: "Frozen Aurora", tag: "AI Preview", image: "/ai-gallery/scene-05.png", duration: "4:11", views: "31.5K", icon: "Sparkles", category: "all", order: 5, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-06", sceneId: "scene-06", title: "Holographic Fractals", tag: "Featured Preview", image: "/ai-gallery/scene-06.jpg", duration: "2:45", views: "16.9K", icon: "Film", category: "all", order: 6, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-07", sceneId: "scene-07", title: "Bioluminescent Caves", tag: "AI Preview", image: "/ai-gallery/scene-07.webp", duration: "3:42", views: "27.1K", icon: "Sparkles", category: "nature", order: 7, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-08", sceneId: "scene-08", title: "Cyberpunk Rain", tag: "Trending Visual", image: "/ai-gallery/scene-08.webp", duration: "2:58", views: "35.6K", icon: "Flame", category: "scifi", order: 8, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
@@ -50,8 +48,6 @@ const STATIC_CARDS: StaticGalleryCard[] = [
   { id: "static-24", sceneId: "scene-24", title: "Twilight Megacity", tag: "Featured Preview", image: "/ai-gallery/scene-24.jpg", duration: "4:41", views: "47.6K", icon: "Flame", category: "scifi", order: 24, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-25", sceneId: "scene-25", title: "Psychedelic Drift", tag: "AI Preview", image: "/ai-gallery/scene-25.jpg", duration: "2:12", views: "18.7K", icon: "Sparkles", category: "abstract", order: 25, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
   { id: "static-26", sceneId: "scene-26", title: "Moonlit Garden", tag: "Featured Preview", image: "/ai-gallery/scene-26.jpg", duration: "3:26", views: "32.4K", icon: "Crown", category: "nature", order: 26, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
-  { id: "static-27", sceneId: "scene-27", title: "Silken Dreamscape", tag: "AI Preview", image: "/ai-gallery/scene-27.png", duration: "2:48", views: "19.3K", icon: "Sparkles", category: "fantasy", order: 27, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
-  { id: "static-28", sceneId: "scene-28", title: "Velvet Horizon", tag: "Trending Visual", image: "/ai-gallery/scene-28.png", duration: "3:14", views: "26.7K", icon: "Flame", category: "scifi", order: 28, active: true, createdAt: "2026-04-21T00:00:00.000Z", updatedAt: "2026-04-21T00:00:00.000Z" },
 ];
 
 /** Get all static cards (only active ones by default) */
