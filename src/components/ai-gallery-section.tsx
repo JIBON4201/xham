@@ -181,10 +181,10 @@ export function AiGallerySection({ onCardClick }: AiGallerySectionProps) {
               className="text-2xl font-bold tracking-tight sm:text-3xl"
             >
               Trending{" "}
-              <span className="text-gradient">AI Visuals</span>
+              <span className="text-gradient">Videos</span>
             </h2>
             <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-              Browse AI-generated images and short cinematic clips. Click any card to preview.
+              Check out free Xnxx Xnxx porn videos.
             </p>
           </div>
 
