@@ -142,7 +142,7 @@ export default function RootLayout({
           type="image/png"
         />
         {/* Verification placeholder (replace with real keys) */}
-        <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
+        <meta name="google-site-verification" content="0GDeDF84F2MqU6LjqWzbeXS37EOJCWbGHUYWp3VfcSA" />.
         <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
       </head>
       <body
