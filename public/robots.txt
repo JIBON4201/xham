@@ -50,4 +50,4 @@ Disallow: /api/
 Disallow: /_next/
 
 # Sitemap
-Sitemap: https://vaultstream.com/sitemap.xml
+Sitemap: https://xham-amber.vercel.app/sitemap.xml
